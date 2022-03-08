@@ -1,0 +1,19 @@
+#
+# GISTRE drivers
+#
+
+menu "GISTRE drivers support"
+
+config MFRC522_EMU
+	bool "GISTRE MFRC522 emulator"
+	help
+      Emulates a single MFRC522 NFC card reader device.
+      This device usually uses SPI, but the emulation uses the regmap
+      API and hides it behind a fake I2C device; which should not
+      matter in any way when communicating with it.
+
+config GISTRE_CARD
+	bool "GISTRE card module"
+	help
+      This module display : Hello, GISTRE card !
+endmenu

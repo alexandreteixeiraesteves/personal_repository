@@ -5,7 +5,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
-
+#include <linux/regmap.h>
 /*
  * Metadonnée 
  */
@@ -24,9 +24,15 @@ MODULE_DESCRIPTION("Driver Gistre Card");
 
 struct gistre_card_dev {
 	struct cdev cdev;
-	char *record;     // buffer of 25 octets + 1 octets of end
-	size_t record_len;
-	bool   was_pinged;
+	struct regmap *map;
+	size_t c_len;
+	enum CMD last_cmd;
+};
+
+enum CMD {
+	NONE = 0,
+	MEM_WRITE = 1,
+	MEM_READ = 2
 };
 
 /* Major will always be dynamically allocated */
@@ -189,10 +195,12 @@ ssize_t gistre_card_read(struct file *file, char __user *buf,
 	pr_info("%s(len=%zu)\n", __func__, len);
 
 	dev = (struct gistre_card_dev *)file->private_data;
-	if (dev->was_pinged) {
+	if (dev->last_command == MEM_READ) {
 		/* Answer with a pong. Don't handle offsets */
-		len = min(len, GISTRE_CARD_BUFSIZE+1);
-		len = min(len, dev->record_len+1);
+		len = dev->c_len
+		
+
+
 		memset(gc_out_buf, 0, GISTRE_CARD_BUFSIZE+1);
 		memcpy(gc_out_buf, dev->record, GISTRE_CARD_BUFSIZE);
 		if (copy_to_user(buf, gc_out_buf, len)) {
@@ -218,25 +226,34 @@ static struct file_operations gistre_card_fops = {
 	.release = gistre_card_release,
 	.read    = gistre_card_read,
 	.write   = gistre_card_write,
-	/* Others functions are using the kernel's defaults */
 };
 
-static struct gistre_card_dev *gistre_card_create(void) {
+static struct gistre_card_dev *gistre_card_create(void)
+{
+        struct gistre_card_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
+        if (!dev)
+                return NULL;
 
-	struct gistre_card_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
-	if (! dev) {
-		return NULL;
-	}
 
-	dev->cdev.owner = THIS_MODULE;
-	cdev_init(&dev->cdev, &gistre_card_fops);
+        struct device *my_device;
+        my_device = mfrc522_find_dev();
 
-	dev->record = NULL;
-	dev->record_len = 0;
-	dev->was_pinged = false;
+        struct mfrc522_dev *my_mfrc522_dev;
+        my_mfrc522_dev = dev_to_mfrc522(my_device);
 
-	return dev;
+        struct regmap *map;
+        map = mfrc522_get_regmap(my_mfrc522_dev);
+
+        dev->cdev.owner = THIS_MODULE;
+        dev->map = map;
+        dev->c_len = 0;
+	dev->last_cmd = NONE;
+
+        cdev_init(&dev->cdev, &gistre_card_fops);
+
+        return dev;
 }
+
 
 static void gistre_card_destroy(struct gistre_card_dev *dev) {
 
@@ -261,22 +278,20 @@ static void gistre_card_exit(void) {
 __init
 static int gistre_card_init(void) {
 
+	pr_info("Hello, GISTRE card.\n");
+	
 	dev_t dev;
-	int ret;
 	const char devname[] = "gistre_card";
 
-	/* Allocate major */
-	ret = alloc_chrdev_region(&dev, 0, 1, devname);
-	if (ret < 0) {
-		pr_info("Failed to allocate major\n");
-		return 1;
-	}
-	else {
-		major = MAJOR(dev);
-		pr_info("Got major %d\n", major);
-	}
+	
+	if (alloc_chrdev_region(&dev, 0, 1, devname) < 0) {
+                pr_info("Failed to allocate major\n");
+                return 1;
+        } else {
+                major = MAJOR(dev);
+                pr_info("Major of the Driver Gistre Card :  %d\n", major);
+        }
 
-	/* Register char device */
 	gc_dev = gistre_card_create();
 	if (! gc_dev) {
 		pr_err("Failed to init pingpong_dev\n");
