@@ -1,0 +1,8 @@
+open Constants (* Needed for the sample size *)
+
+(* Here, the size must be the k. Too bad I can't provide it
+ * as a constant parameter. The advantage of having this
+ * interface is that the C function does not need to be
+ * changed for each size. *)
+fun read_samples(sample_size:int) returns (samples:float^sample_size)
+fun write_samples(sample_size:int;samples:float^sample_size) returns ()

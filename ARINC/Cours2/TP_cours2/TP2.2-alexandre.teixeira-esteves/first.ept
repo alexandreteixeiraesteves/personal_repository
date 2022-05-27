@@ -1,0 +1,42 @@
+open Externc (* declaration of external functions *)
+
+(* global constant *)
+const addr_hs:int = 0x2000
+const addr_fs:int = 0x3000
+const default_ignition:int = 0
+
+node fs_handler(fs:bool;id:int)
+	returns ()
+var
+	x:int ;
+let
+	x = merge fs
+	(true -> default_ignition)
+	(false -> id whenot fs);
+	() = act(x) ;
+tel
+
+node hs_handler(hs:bool)
+	returns (id:int)
+let
+	if hs then
+		id = g() ;
+	else
+	var x,y : int; in
+		y = 15 fby x ;
+		id = f1(y) ;
+		x = f2(id) ;
+	end ;
+tel
+
+node main () returns ()
+var
+	hs : bool ;
+	id : int ;
+	fs : bool ;
+let
+	hs = read_bool(addr_hs) ;
+	id = hs_handler(hs) ;
+	fs = read_bool(addr_fs) ;
+	() = fs_handler(fs,id) ;
+tel

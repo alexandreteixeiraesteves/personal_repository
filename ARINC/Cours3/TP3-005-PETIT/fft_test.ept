@@ -1,0 +1,35 @@
+open Complex 
+open Complex_io
+open Complex_vec_io
+open Fft
+open Ifft
+
+fun fft8 () returns ()
+var
+	o : complex^8;
+	o1 : complex^8;
+	o2 : complex^8;
+	o3 : complex^8;
+let
+	o = ifft([{re=1.0;im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0}]);
+	o2 = fft8(o);
+	() = print_complex_vector(o2);
+	o1 = ifft([{re=0.0;im=0.0},
+		{re=1.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0},
+		{re=0.0; im=0.0}]);
+	o3 = fft8(o1);
+	() = print_complex_vector(o3);
+	
+tel

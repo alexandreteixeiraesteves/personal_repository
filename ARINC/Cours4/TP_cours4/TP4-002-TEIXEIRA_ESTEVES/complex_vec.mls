@@ -1,0 +1,17 @@
+open Complex
+open Complex_io
+open Complex_vec_io
+node vect_add<<n:int>>(v1 : Complex.complex^n; v2 : Complex.complex^n)
+returns (c : Complex.complex^n)
+let
+  c = (map (Complex.complex_add())<<n>>)(())(v1, v2)
+tel
+
+node sum_of_all<<n:int>>(v : Complex.complex^n)
+returns (n_2 : Complex.complex)
+var tmp : Complex.complex;
+let
+  n_2 = (fold (Complex.complex_add())<<n>>)(())(v, tmp);
+  tmp = { Complex.re = 0.000000; Complex.im = 0.000000 }
+tel
+

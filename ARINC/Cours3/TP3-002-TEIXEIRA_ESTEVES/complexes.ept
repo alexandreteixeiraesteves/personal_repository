@@ -1,0 +1,21 @@
+open Complex
+open Complex_io
+
+fun complexes () returns ()
+var
+	c1, c2, sum(*, diff, mult*): complex ;
+let
+	c1 = read_complex();
+	() = print_complex(c1);
+	c2 = read_complex();
+	() = print_complex(c2);
+	
+	sum = complex_add(c1,c2);
+	() = print_complex(sum);
+(*
+	diff = complex_sub(c1,c2);
+	() = print_complex(diff);
+
+	mult = complex_mul(c1,c2);
+	() = print_complex(mult); *)
+tel  

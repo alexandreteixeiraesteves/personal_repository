@@ -1,0 +1,5 @@
+val fun gnc_print (i:int; idx:int; y:int) returns ()
+val fun fast_print (i:int; idx:int; y:int) returns ()
+val fun thermal_print (idx:int) returns ()
+val fun act (i:int) returns ()
+

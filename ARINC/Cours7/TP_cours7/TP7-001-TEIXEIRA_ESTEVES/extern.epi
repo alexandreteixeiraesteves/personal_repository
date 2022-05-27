@@ -1,0 +1,2 @@
+fun f(i:int) returns (o:int)
+fun g(i:int) returns (o:int)

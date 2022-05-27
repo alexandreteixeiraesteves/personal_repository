@@ -1,0 +1,58 @@
+open Externc (* declaration of external functions *)
+
+node gnc(y:int) returns (x:int)
+var
+	idx : int ;
+let
+	x = y - idx ;
+	idx = 0 fby (idx + 1);
+	() = gnc_print(y, idx, x) ;
+tel
+
+node fast(x:int) returns (y:int)
+var
+	idx:int;
+let
+	idx = 0 fby (idx + 1);
+	y = 2*x+idx;
+	() = fast_print(x, idx, y);
+tel
+
+node condact_gnc<< x_init:int >>(c2:bool; y:int) returns (x:int)
+let
+	x = merge c2
+		(true -> gnc(y when c2))
+		(false -> (x_init fby x) whenot c2);
+tel
+
+node condact_thermal(c:bool) returns ()
+var
+	idx:int ;
+let
+	idx = 0 fby (idx + 1) ;
+	() = thermal_print(idx);
+tel
+
+node condact_f<< x_init:int >>(c1:bool; y:int) returns (x:int)
+let
+	x = merge c1
+		(true -> fast(y when c1))
+		(false -> (x_init fby x) whenot c1);
+tel
+
+
+node main () returns ()
+var 
+	mif_cnt, x, y: int ;
+	clk_f, clk_thermal, clk_gnc : bool ;
+let
+	(* Clock computation *)
+	mif_cnt = 0 fby ((mif_cnt+1)%10) ;
+	clk_f = true;
+	clk_thermal = (mif_cnt = 0) ;
+	clk_gnc = (mif_cnt = 9) ;
+	(* Flot de données *)
+	y = condact_f<<31>>(clk_f, 0 fby x) ;
+	() = condact_thermal(true when clk_thermal) ;
+	x = condact_gnc<<99>>(clk_gnc, y) ;
+tel

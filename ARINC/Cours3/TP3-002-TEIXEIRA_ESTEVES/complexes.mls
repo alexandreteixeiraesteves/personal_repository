@@ -1,0 +1,13 @@
+open Complex
+open Complex_io
+node complexes returns 
+var sum : Complex.complex; c2 : Complex.complex; c1 : Complex.complex;
+let
+  () = Complex_io.print_complex(sum);
+  sum = Complex.complex_add(c1, c2);
+  () = Complex_io.print_complex(c2);
+  c2 = Complex_io.read_complex();
+  () = Complex_io.print_complex(c1);
+  c1 = Complex_io.read_complex()
+tel
+

@@ -1,0 +1,12 @@
+open Sndlib
+open Myprog
+
+node main () returns ()
+var 
+	samples:float^256;
+	tmp:float^256;
+let 
+	samples = myread(256);
+	tmp = map<<256>> (/.) (samples,2.0^256);
+	() = mywrite(256, tmp);
+tel

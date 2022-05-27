@@ -1,0 +1,25 @@
+open Complex (* declaration of external functions *)
+open Complex_io
+
+fun complexes () returns ()
+var
+	o : complex ;
+	p : complex ;
+	q : complex ;
+	r : complex ;
+	s : complex ;
+let
+	o = read_complex();
+	() = print_complex(o);
+	p = read_complex();
+	() = print_complex(p);
+	q = complex_add(o, p);
+	() = print_complex(q);
+	r = complex_sub(o, p);
+	s = complex_mul(o, p);
+	
+	
+	
+	() = print_complex(r);
+	() = print_complex(s);
+tel

@@ -1,0 +1,24 @@
+type complex = {
+	re : float ;
+	im : float 
+}
+
+fun complex_add(i1:complex;i2:complex) returns (o:complex)
+let
+	o = { re = i1.re +. i2.re ; im = i1.im +. i2.im }
+tel
+
+fun complex_sub(i1:complex;i2:complex) returns (o:complex)
+let
+	o = { re = i1.re -. i2.re ; im = i1.im -. i2.im }
+tel
+
+fun complex_mul(i1:complex;i2:complex) returns (o:complex)
+let
+	o = { re = i1.re*.i2.re -. i1.im*.i2.im ; im = i1.re*.i2.im+.i1.im*.i2.re }
+tel
+
+fun complex_div(i1:complex;i2:float) returns (o:complex)
+let
+	o = {re = i1.re/.i2 ; im = i1.im/.i2 };
+tel

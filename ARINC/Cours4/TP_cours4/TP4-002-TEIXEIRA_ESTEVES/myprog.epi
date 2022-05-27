@@ -1,0 +1,2 @@
+fun myread(size:int) returns (samples:float^256)
+fun mywrite(size:int;samples:float^256) returns ()

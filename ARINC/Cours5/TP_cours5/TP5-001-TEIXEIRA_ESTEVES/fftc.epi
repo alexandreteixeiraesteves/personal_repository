@@ -1,0 +1,6 @@
+open Constants
+open Complex
+
+fun bitrev1024(i:complex^1024) returns (o:complex^1024)
+fun get_twiddle(n:int;k:int) returns (o:complex)
+fun get_hann1024(k:int) returns (o:float)

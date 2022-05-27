@@ -1,0 +1,85 @@
+open Complex
+open Complex_io
+open Twiddle
+open Complex_vec_io
+open Bitrev
+fun tiddle(n:int; n1: int) returns (o: complex)
+let
+	o = twiddle(n1, n);
+tel
+
+fun bf<<n:int>>(i:complex^n) returns (o:complex^n)
+var
+	i1 : complex^(n/2);
+	i2 : complex^(n/2);
+	o1 : complex^(n/2);
+	p : complex^(n/2);
+	r : complex^(n/2);
+	m : complex^(n/2);
+let
+	i1 = i[0..((n/2)-1)];
+	i2 = i[(n/2)..(n-1)];
+	o1 = map<< (n/2) >> complex_add (i1, i2);
+	p = map<< (n/2) >> complex_sub (i1, i2);
+	m = mapi<< (n/2) >> tiddle<(n)>();
+	r = map<< (n/2) >> complex_mul (m, p);
+	o = o1@r;
+tel
+
+fun fft_aux2(i:complex^2) returns (o:complex^2)
+let
+	o = bf<<2>>(i);	
+tel
+
+fun fft_aux4 (i:complex^4 ) returns (out:complex^4 )
+var
+	o : complex^4;
+	o1 : complex^2;
+	o2 : complex^2;
+let
+	o = bf<<4>>(i);
+	o1 = fft_aux2(o[0..1]);
+	o2 = fft_aux2(o[2..3]);
+	out = o1@o2;
+tel
+
+fun fft_aux8 (i:complex^8 ) returns (out:complex^8 )
+var
+	o : complex^8;
+	o1 : complex^4;
+	o2 : complex^4;
+let
+	o = bf<<8>>(i);
+	o1 = fft_aux4(o[0..3]);
+	o2 = fft_aux4(o[4..7]);
+	out = o1@o2;
+tel
+
+fun fft_aux16 (i:complex^16 ) returns (out:complex^16 )
+var
+	o : complex^16;
+let
+	o = fft_aux8(i[0..7])@fft_aux8(i[8..15]);
+	out = fft_aux8(o[0..7])@fft_aux8(o[8..15]);
+tel
+
+fun fft8 (i:complex^8 ) returns (out:complex^8 )
+var
+	o : complex^8;
+	o1 : complex^8;
+let
+	o = fft_aux8(i);
+	o1 = bitrev8(o);
+	out = map<<8>> complex_div(o1, 8.0^8);
+tel
+fun fft16 (i:complex^16 ) returns (out:complex^16 )
+var
+	o : complex^16;
+	o1 : complex^16;
+let
+	o = fft_aux16(i);
+	o1 = bitrev16(o);
+	out = map<<16>> complex_div(o1, 16.0^16);
+tel
+
+

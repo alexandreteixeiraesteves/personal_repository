@@ -1,0 +1,36 @@
+open Complex
+open Fft
+
+fun swap (c:complex ) returns (o:complex )
+let
+	o = {re = c.im; im= c.re };
+tel
+
+fun complex_mult_normalize (c: complex; n: float ) returns (o:complex )
+let
+	o = {re = c.re*.n; im = c.im*.n };
+tel
+
+fun ifft (c:complex^8 ) returns (o:complex^8 )
+var
+	o1: complex^8;
+	o2: complex^8;
+	o3: complex^8;
+let
+	o1 = map<<8>> swap(c);
+	o2 = fft8(o1);
+	o3 = map<<8>> swap(o2);
+	o = map<<8>> complex_mult_normalize(o3, 8.0^8);
+tel
+
+fun ifft1024 (c:complex^1024 ) returns (o:complex^1024 )
+var
+	o1: complex^1024;
+	o2: complex^1024;
+	o3: complex^1024;
+let
+	o1 = map<<1024>> swap(c);
+	o2 = fft1024(o1);
+	o3 = map<<1024>> swap(o2);
+	o = map<<1024>> complex_mult_normalize(o3, 1024.0^1024);
+tel

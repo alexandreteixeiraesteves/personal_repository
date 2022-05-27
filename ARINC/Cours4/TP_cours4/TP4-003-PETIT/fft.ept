@@ -1,0 +1,170 @@
+open Complex
+open Complex_io
+open Twiddle
+open Complex_vec_io
+open Bitrev
+fun tiddle(n:int; n1: int) returns (o: complex)
+let
+	o = twiddle(n1, n);
+tel
+
+fun bf<<n:int>>(i:complex^n) returns (o:complex^n)
+var
+	i1 : complex^(n/2);
+	i2 : complex^(n/2);
+	o1 : complex^(n/2);
+	p : complex^(n/2);
+	r : complex^(n/2);
+	m : complex^(n/2);
+let
+	i1 = i[0..((n/2)-1)];
+	i2 = i[(n/2)..(n-1)];
+	o1 = map<< (n/2) >> complex_add (i1, i2);
+	p = map<< (n/2) >> complex_sub (i1, i2);
+	m = mapi<< (n/2) >> tiddle<(n)>();
+	r = map<< (n/2) >> complex_mul (m, p);
+	o = o1@r;
+tel
+
+fun fft_aux2(i:complex^2) returns (o:complex^2)
+let
+	o = bf<<2>>(i);	
+tel
+
+fun fft_aux4 (i:complex^4 ) returns (out:complex^4 )
+var
+	o : complex^4;
+	o1 : complex^2;
+	o2 : complex^2;
+let
+	o = bf<<4>>(i);
+	o1 = fft_aux2(o[0..1]);
+	o2 = fft_aux2(o[2..3]);
+	out = o1@o2;
+tel
+
+fun fft_aux8 (i:complex^8 ) returns (out:complex^8 )
+var
+	o : complex^8;
+	o1 : complex^4;
+	o2 : complex^4;
+let
+	o = bf<<8>>(i);
+	o1 = fft_aux4(o[0..3]);
+	o2 = fft_aux4(o[4..7]);
+	out = o1@o2;
+tel
+
+fun fft_aux16 (i:complex^16 ) returns (out:complex^16 )
+var
+	o : complex^16;
+	o1 : complex^8;
+	o2 : complex^8;
+let
+	o = bf<<16>>(i);
+	o1 = fft_aux8(o[0..7]);
+	o2 = fft_aux8(o[8..15]);
+	out = o1@o2;
+tel
+
+fun fft_aux32 (i:complex^32) returns (out:complex^32)
+var
+	o : complex^32;
+	o1 : complex^16;
+	o2 : complex^16;
+let
+	o = bf<<32>>(i);
+	o1 = fft_aux16(o[0..(32/2)-1]);
+	o2 = fft_aux16(o[(32/2)..31]);
+	out = o1@o2;
+tel
+
+fun fft_aux64 (i:complex^64) returns (out:complex^64)
+var
+	o : complex^64;
+	o1 : complex^32;
+	o2 : complex^32;
+let
+	o = bf<<64>>(i);
+	o1 = fft_aux32(o[0..(64/2)-1]);
+	o2 = fft_aux32(o[(64/2)..63]);
+	out = o1@o2;
+tel
+
+fun fft_aux128 (i:complex^128) returns (out:complex^128)
+var
+	o : complex^128;
+	o1 : complex^64;
+	o2 : complex^64;
+let
+	o = bf<<128>>(i);
+	o1 = fft_aux64(o[0..(128/2)-1]);
+	o2 = fft_aux64(o[(128/2)..127]);
+	out = o1@o2;
+tel
+fun fft_aux256 (i:complex^256) returns (out:complex^256)
+var
+	o : complex^256;
+	o1 : complex^128;
+	o2 : complex^128;
+let
+	o = bf<<256>>(i);
+	o1 = fft_aux128(o[0..(256/2)-1]);
+	o2 = fft_aux128(o[(256/2)..255]);
+	out = o1@o2;
+tel
+
+fun fft_aux512 (i:complex^512) returns (out:complex^512)
+var
+	o : complex^512;
+	o1 : complex^256;
+	o2 : complex^256;
+let
+	o = bf<<512>>(i);
+	o1 = fft_aux256(o[0..(512/2)-1]);
+	o2 = fft_aux256(o[(512/2)..511]);
+	out = o1@o2;
+tel
+
+fun fft_aux1024 (i:complex^1024) returns (out:complex^1024)
+var
+	o : complex^1024;
+	o1 : complex^512;
+	o2 : complex^512;
+let
+	o = bf<<1024>>(i);
+	o1 = fft_aux512(o[0..(1024/2)-1]);
+	o2 = fft_aux512(o[(1024/2)..1023]);
+	out = o1@o2;
+tel
+
+fun fft8 (i:complex^8 ) returns (out:complex^8 )
+var
+	o : complex^8;
+	o1 : complex^8;
+let
+	o = fft_aux8(i);
+	o1 = bitrev8(o);
+	out = map<<8>> complex_div(o1, 8.0^8);
+tel
+fun fft16 (i:complex^16 ) returns (out:complex^16 )
+var
+	o : complex^16;
+	o1 : complex^16;
+let
+	o = fft_aux16(i);
+	o1 = bitrev16(o);
+	out = map<<16>> complex_div(o1, 16.0^16);
+tel
+
+fun fft1024 (i:complex^1024 ) returns (out:complex^1024)
+var
+	o : complex^1024;
+	o1 : complex^1024;
+let
+	o = fft_aux1024(i);
+	o1 = bitrev1024(o);
+	out = map<<1024>> complex_div(o1, 1024.0^1024);
+tel
+
+

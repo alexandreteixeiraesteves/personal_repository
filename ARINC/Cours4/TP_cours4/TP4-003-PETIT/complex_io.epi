@@ -1,0 +1,4 @@
+open Complex
+fun read_complex() returns (o:complex)
+fun print_complex(i:complex) returns ()
+

@@ -1,0 +1,32 @@
+open Complex
+open Sndlib
+open Myprog
+const zero_f_256 = 0.000000^256
+node float_to_complex(f : float) returns (c : Complex.complex)
+let
+  c = { Complex.re = f; Complex.im = 0.000000 }
+tel
+
+node complex_to_float(c : Complex.complex) returns (f : float)
+let
+  f = c.Complex.re
+tel
+
+node main returns 
+var c3 : Complex.complex^256; c0 : Complex.complex^1024; s : float^1024;
+    t : float^256; s3 : float^256; s2 : float^256; s1 : float^256;
+    s0 : float^256; v : float^(256 + 256); v_1 : float^(256 + (256 + 256));
+let
+  () = Myprog.mywrite(256, t);
+  t = (map (complex_to_float())<<256>>)(())(c3);
+  c3 = c0[0..255];
+  c0 = (map (float_to_complex())<<1024>>)(())(s);
+  s = s3 @ v_1;
+  v_1 = s2 @ v;
+  v = s1 @ s0;
+  s3 = zero_f_256 fby s2;
+  s2 = zero_f_256 fby s1;
+  s1 = zero_f_256 fby s0;
+  s0 = Myprog.myread(256)
+tel
+

@@ -1,0 +1,50 @@
+type complex = 
+{	
+	re : float ;
+	im : float
+}
+
+fun complex_add(i1:complex;i2:complex) returns (o:complex)
+var
+	a:float;	(*i1 partie réel*)
+	b:float;	(*i1 partie imaginaire*)
+	c:float;	(*i2 partie réel*)
+	d:float;	(*i2 partie imaginaire*)
+let
+	a = i1.re ;
+	b = i1.im ;
+	c = i2.re ;
+	d = i2.im ;
+	o = { 	re = a+.c  ;
+		im = b+.d  }
+tel
+
+fun complex_sub(i1:complex;i2:complex) returns (o:complex)
+var
+	a:float;	(*i1 partie réel*)
+	b:float;	(*i1 partie imaginaire*)
+	c:float;	(*i2 partie réel*)
+	d:float;	(*i2 partie imaginaire*)
+let	
+	a = i1.re ;
+	b = i1.im ;
+	c = i2.re ;
+	d = i2.im ;
+	o = { 	re = a-.c   ;
+		im = b-.d   }
+tel
+
+fun complex_mul(i1:complex;i2:complex) returns (o:complex)
+var
+	a:float;	(*i1 partie réel*)
+	b:float;	(*i1 partie imaginaire*)
+	c:float;	(*i2 partie réel*)
+	d:float;	(*i2 partie imaginaire*)
+let
+	a = i1.re ;
+	b = i1.im ;
+	c = i2.re ;
+	d = i2.im ;
+	o = { 	re = (a*.c)-.(b*.d)    ;
+		im = (a*.d)+.(b*.c)	}
+tel

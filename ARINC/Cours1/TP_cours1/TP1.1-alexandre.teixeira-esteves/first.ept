@@ -1,0 +1,7 @@
+fun myfun (x:int;y:int) returns (z:int;t:int)
+var x2 : int;
+let
+	x2 = x*x ;
+	t = x2 + 3*x ;
+	z= t + y ;
+tel

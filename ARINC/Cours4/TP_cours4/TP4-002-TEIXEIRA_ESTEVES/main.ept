@@ -1,0 +1,39 @@
+open Complex
+open Sndlib
+open Myprog
+
+const zero_f_256 : float^256 = 0.0^256
+
+fun float_to_complex(f:float) returns (c:complex)
+let
+	c = {re = f;im = 0.0};
+tel
+
+fun complex_to_float(c:complex) returns (f:float)
+let
+        f = c.re;
+tel
+
+node main () returns ()
+var 
+	s0, s1, s2, s3, t : float^256;
+	s : float^1024;
+	c0 : complex^1024;
+	c3 : complex^256;
+	(*samples:float^256;*)
+	(*tmp:float^256;*)
+let 
+	s0 = myread(256);
+	
+	s1 = zero_f_256 fby s0;
+	s2 = zero_f_256 fby s1;
+	s3 = zero_f_256 fby s2;
+
+	s = s3@s2@s1@s0 ; 			(* concaténation *)
+	c0 = map<<1024>> float_to_complex(s);  	(*float 2 complex*)
+	c3 = c0[0..255];			(*extract [0..255]*)
+	t = map<<256>> complex_to_float(c3);	(*complex 2 float*)
+
+	() = mywrite(256, t);
+	
+tel

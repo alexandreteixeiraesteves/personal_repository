@@ -1,0 +1,16 @@
+open Complex
+open Complex_io
+open Complex_vec_io
+open Complex_vec
+node vectors returns 
+var c : Complex.complex; v : Complex.complex^3; v2 : Complex.complex^3;
+    v1 : Complex.complex^3;
+let
+  () = Complex_io.print_complex(c);
+  c = Complex_vec.sum_of_all<<3>>(v);
+  () = Complex_vec_io.print_complex_vector(v);
+  v = Complex_vec.vect_add<<3>>(v1, v2);
+  v2 = Complex_vec_io.read_complex_vector();
+  v1 = Complex_vec_io.read_complex_vector()
+tel
+

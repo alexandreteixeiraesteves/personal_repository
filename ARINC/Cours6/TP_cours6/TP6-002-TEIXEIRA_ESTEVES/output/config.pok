@@ -1,0 +1,14 @@
+tick	0x186A0
+mtf	0xf4240
+
+partitions 2
+0 				0xf4240
+ports 0
+1 mypart.elf	0x100000	0xf4240
+ports 0
+
+windows 2
+0	0x0	0x186A0	0 1
+1	0x186A0	0xf4240	1 1
+
+channels 0

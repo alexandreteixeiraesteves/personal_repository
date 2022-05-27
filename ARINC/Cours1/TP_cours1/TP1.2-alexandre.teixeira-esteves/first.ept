@@ -1,0 +1,4 @@
+node sum2(i:int) returns (o:int)
+let
+	o = i + (0 fby i) ;
+tel

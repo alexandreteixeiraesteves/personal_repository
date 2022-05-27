@@ -1,0 +1,2 @@
+fun read_samples(sample_size:int; samples:float) returns ()
+fun write_samples(sample_size:int; samples:float) returns ()

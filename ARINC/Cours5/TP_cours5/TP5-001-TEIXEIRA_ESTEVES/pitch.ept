@@ -1,0 +1,231 @@
+open Constants
+open Complex
+open Sndio
+open Fft
+open Float
+open Fftc 
+
+(*------------------------------------------------------------*)
+(* Useful constants. Too bad I cannot use a function or a map *)
+(* to initialize constants (maybe I can get the effect by     *)
+(* using "at" and a fby.                                      *)
+(*------------------------------------------------------------*)
+const cst_zero_f_fft : float^fft_size = (0.0^fft_size)
+const cst_zero_f_fft2 : float^(fft_size/2) = (0.0^(fft_size/2))
+const cst_zero_f_sample : float^sample_size = (0.0^sample_size)
+const cst_zero_c_fft : complex^fft_size =
+   ({ re = 0.0 ; im = 0.0 }^fft_size)
+const cst_zero_c_fft2 : complex^(fft_size/2) =
+   ({ re = 0.0 ; im = 0.0 }^(fft_size/2))
+const cst_zero_c_sample : complex^sample_size =
+   ({ re = 0.0 ; im = 0.0 }^sample_size)
+
+(*------------------------------------------------------------*)
+(* Various functions and nodes used from main                 *)
+(*------------------------------------------------------------*)
+
+(*......................................*)
+(* map delta phase into +/- Pi interval *)
+(*......................................*)
+fun normalize_phase(i:float) returns (o:float)
+var x0,x1 : int ; 
+let
+  x0 = float2int(i /. pi) ;
+  x1 =
+    if int_is_odd(x0) then
+      if x0 >= 0 then
+        x0+1
+      else
+        x0-1
+    else x0 ;
+  o = i -. (pi *. int2float(x1)) ;
+tel
+
+(*......................................*)
+(* Analysis on one point                *)
+(*......................................*)
+fun analysis(phase:float;pre_phase:float;k:int) returns (analysis_freq:float)
+var osamp_float,k_float,sample_rate_float,fft_size_float : float ;
+    expect,x0,x1,x2,freq_per_bin : float ;
+    tmp_osamp,tmp_sample_rate,tmp_fft_size : int ;
+let
+  (* conversions *)
+  tmp_osamp = osamp ;
+  osamp_float = int2float(tmp_osamp) ;
+  k_float = int2float(k) ;
+  tmp_sample_rate = sample_rate ;
+  sample_rate_float = int2float(tmp_sample_rate) ;
+  tmp_fft_size = fft_size ;
+  fft_size_float = int2float(tmp_fft_size) ;
+  (* actual code *)
+  expect = 2.0 *. pi /. osamp_float ;
+  x0 = phase -. pre_phase -. (k_float *. expect) ;
+  x1 = normalize_phase(x0) ;
+  x2 = x1 *. osamp_float /. (2.0 *. pi) ;
+  freq_per_bin = sample_rate_float /. fft_size_float ;
+  analysis_freq = (k_float +. x2) *. freq_per_bin ;
+tel
+
+(*......................................*)
+(* The actual pitch shifting happens    *)
+(* here. I need an accumulator type.    *)
+(*......................................*)
+type aux_vec =
+  {
+    mag : float^fft_size2 ;
+    freq: float^fft_size2
+  }
+
+fun process (pitch_shift:float;freq:float;mag:float;k:int;acc_in:aux_vec) returns (acc_out:aux_vec)
+var index : int ;
+let
+  index = float2int(pitch_shift *. int2float(k)) ;
+  if (index >= fft_size2) then
+    acc_out = acc_in ;
+  else
+    acc_out =
+      {
+        mag = [acc_in.mag with [index] = acc_in.mag[>index<] +. mag] ;
+        freq = [acc_in.freq with [index] = acc_in.freq[>index<] +. (freq *. pitch_shift) ]
+      } ;
+  end
+tel
+
+(*......................................*)
+(* Do the additive phase synthesis and  *)
+(* convert back to complex from polar   *)
+(*......................................*)
+fun synthesis (mag_in:float;synth_freq_in:float;sum_freq_in:float;k:int)
+          returns
+	  (fft_in:complex;sum_freq_out:float)
+var sample_rate_float,fft_size_float,k_float,osamp_float : float ;
+    freq_per_bin,x0,x1 : float ;
+    tmp_sample_rate,tmp_osamp,tmp_fft_size:int ;
+let
+  (* conversions *)
+  tmp_sample_rate = sample_rate ;
+  tmp_osamp = osamp ;
+  tmp_fft_size = fft_size ;
+  sample_rate_float = int2float(tmp_sample_rate) ;
+  fft_size_float = int2float(tmp_fft_size) ;
+  k_float = int2float(k) ;
+  osamp_float = int2float(tmp_osamp) ;
+  (* actual code *)
+  freq_per_bin = sample_rate_float /. fft_size_float ;
+  x0 = (((synth_freq_in -. (k_float *. freq_per_bin)) /. freq_per_bin) *. 2.0 *. pi) /. osamp_float ;
+  x1 = x0 +. ((k_float *. 2.0 *. pi) /. osamp_float) ;
+  sum_freq_out = sum_freq_in +. x1 ;
+  fft_in = polar2complex(mag_in,sum_freq_out) ;
+tel
+
+(*......................................*)
+(* *)
+(*......................................*)
+const semitones : float = 4.0
+const two : float = 2.0
+node pitch_shift_driver () returns (ps:float)
+var t : float ;
+    tmp_two : float ;
+let
+  t = semitones /. 12.0 ;
+  tmp_two = two ;
+  ps = float_pow(tmp_two,t) ;
+tel
+
+(*--------------------------------------------------*)
+(* The main application                             *)
+(*--------------------------------------------------*)
+fun hann_window_aux(i:float;k:int) returns (o:float)
+let
+  o = i *. get_hann1024(k) ;
+tel
+fun hann_window(i:float^fft_size) returns (o:float^fft_size)
+let
+  o = mapi<<fft_size>> hann_window_aux (i) ;
+tel
+const int_factor : int  = (osamp) / 4
+node pitch_algo (sample:float^fft_size) returns (output_acc:float^fft_size)
+var
+  win,win_fft,ifft_out : complex^fft_size ;
+  win_fft2 : complex^fft_size2 ;
+  mag_tmp,phase,mag,pre_phase,analysis_freq : float^fft_size2 ;
+  aux_zero,aux_out : aux_vec ;
+  sum_freq,pre_sum_freq : float^fft_size2 ;
+  fft_pos : complex^fft_size2 ;
+  pitch_shift : float ;
+  inv_factor : float ;
+  hann_fft,rot_acc : float^fft_size ;
+  additive : float^fft_size ;
+  tmp_int_factor : int ;
+let
+  (* Compute the pitch shift *)
+  pitch_shift = pitch_shift_driver() ;
+
+  (* Convert to complex *)
+  win = map<<fft_size>>
+          float2complex
+          (hann_window(sample)) ;
+  (* Perform FFT *)
+  win_fft = fft1024(win) ;
+
+  (* Remove negative frequencies, which are not needed (optimization) *)
+  win_fft2 = win_fft[0..(fft_size2-1)] ;
+
+  (* Extract magnitude and phase. Magnitude is doubled to
+   * compensate for negative frequencies loss. Also, store
+   * phase, as I also need the pre values. *)
+  (mag_tmp,phase) = map<<fft_size2>> complex2polar (win_fft2) ;
+  mag = map<<fft_size2>> ( *.)<(2.0)> (mag_tmp) ;
+  pre_phase = cst_zero_f_fft2 fby phase ;
+
+  (* The analysis phase *)
+  analysis_freq = mapi<<fft_size2>> analysis (phase,pre_phase) ;
+
+  (* Perform the pitch shifting *)
+  aux_zero =
+    {
+      mag = cst_zero_f_fft2 ;
+      freq= cst_zero_f_fft2 
+    } ;
+  aux_out =
+    foldi<<fft_size2>> process<(pitch_shift)> (analysis_freq,mag,aux_zero) ;
+
+  (* Additive phase synthesis and conversion from polar *)
+  (fft_pos,sum_freq) =
+    mapi<<fft_size2>> synthesis (aux_out.mag,aux_out.freq,pre_sum_freq) ;
+  pre_sum_freq = cst_zero_f_fft2 fby sum_freq ;
+
+  (* IFFT and final filtering *)
+  ifft_out = ifft1024(fft_pos@cst_zero_c_fft2) ;
+
+  (* Build the additive factor *)
+  tmp_int_factor = int_factor ;
+  inv_factor = 1.0 /. int2float(tmp_int_factor) ;
+  hann_fft = hann_window(map<<fft_size>> re (ifft_out)) ;
+  additive = map<<fft_size>> ( *.)<(inv_factor)> (hann_fft) ;
+  (* Overlap-add (rotating) accumulator *)
+  rot_acc = output_acc[sample_size..(fft_size-1)]@cst_zero_f_sample ;
+  output_acc = map<<fft_size>> (+.) (cst_zero_f_fft fby rot_acc,additive) ;
+  (* output_acc = map<<fft_size>> re (ifft1024(fft1024(map<<fft_size>> float2complex (sample)))) ; *)
+tel
+
+node main() returns ()
+var
+  sample0,sample1,sample2,sample3 : float^sample_size ;
+  sample : float^fft_size ;
+  output_acc : float^fft_size ;
+  tmp_sample_size : int ;
+let
+  (* Sliding window over input samples, Hann window and FFT over it *)
+  tmp_sample_size = sample_size ;
+  sample0 = read_samples(tmp_sample_size) ;
+  sample1 = cst_zero_f_sample fby sample0 ;
+  sample2 = cst_zero_f_sample fby sample1 ;
+  sample3 = cst_zero_f_sample fby sample2 ;
+  sample  = sample3@sample2@sample1@sample0 ;
+
+  output_acc = pitch_algo(sample) ;
+
+  (* Output *)
+  () = write_samples(tmp_sample_size,output_acc[0..(sample_size-1)]) ;
+tel

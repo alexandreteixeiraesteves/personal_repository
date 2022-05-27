@@ -1,0 +1,19 @@
+open Complex 
+open Complex_io
+open Complex_vec_io
+open Complex_vec
+
+fun vectors() returns ()
+var
+	v1, v2, v : complex^3;
+	c : complex;
+let
+	v1 = read_complex_vector();
+	v2 = read_complex_vector();
+	
+	v = vect_add<<3>>(v1,v2);
+	() = print_complex_vector(v);
+
+	c = sum_of_all<<3>>(v);
+	() = print_complex(c);
+tel

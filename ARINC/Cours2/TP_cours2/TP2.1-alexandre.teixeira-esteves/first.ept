@@ -1,0 +1,4 @@
+node rcounter(rst:bool) returns (cnt:int)
+let
+	cnt = if rst then 0 else (0 fby (cnt+1))
+tel

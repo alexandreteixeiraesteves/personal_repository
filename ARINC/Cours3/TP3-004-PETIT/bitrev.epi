@@ -1,0 +1,4 @@
+open Complex
+fun bitrev8(i:complex^8) returns (o:complex^8)
+fun bitrev16(i:complex^16) returns (o:complex^16)
+

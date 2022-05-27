@@ -1,0 +1,5 @@
+val fun read_bool(addr:int) returns (value:bool)
+val fun f1 (i:int) returns (o:int)
+val fun f2 (i:int) returns (o:int)
+val fun g () returns (o:int)
+val fun act (i:int) returns ()
